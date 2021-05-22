@@ -1,0 +1,15 @@
+<Hello Pokemon!>
+
+- CNN을 활용한 포켓몬 이미지 식별 및 분류 모형 제작
+- Tensorflow 2.3.0 ver, Transfer Learning
+- Pre-Trained Model : ResNet50V2
+- Optimizer : Nadam(Hyperparameter는 기본값 사용)
+- 총 10개의 Class, 각 Class당 100개의 Image Dataset 제공
+['bulbasaur', 'charmander', 'eevee', 'gengar', 'gyarados',
+ 'meowth', 'mewtwo', 'pikachu', 'raichu', 'squirtle']
+- Train : Test : Validation = 8 : 1 : 1
+- Image Size는 160*160으로 일괄적 resize후 학습
+- 최대 epoch 수는 50회
+- 성능이 증가하지 않는 epoch를 최대 5회 까지만 허용
+- 첫 번째 model은 Data Augmentation 미적용
+- 두 번째 model은 Data Augmentation 적용

@@ -1,0 +1,244 @@
+// 0915
+
+1. 환경 설정 및 기본 코드 작성 완료
+
+2. Pre Trained Model은 ResNet50V2로 결정
+
+3. Binary Classification(피카츄, 라이츄)은 어느 정도 되는 것 확인
+
+4. Category Classification(피카츄, 라이츄, 이상해씨, 파이리, 꼬부기)를 위해
+-> Activation Function을 Sigmoid -> Softmax로 변경
+-> Loss 또한 Binary Crossentropy -> Categorical Crossentropy로 변경
+
+5. 제일 큰 문제점 : 이미지 데이터의 부족
+-> 최소 한 포켓몬 당 100장의 사진이 필요할 것으로 예상
+-> 어떻게 수집? 직접 구글링밖에 답이 없는 것인가?
+
+6. 원활한 디버깅을 위해 Visualization 코드 작성 필요
+
+
+
+// 0916
+
+1. 500개 이미지 데이터셋 제작 완료
+-> 5종류 포켓몬 * 각각 100개 이미지
+-> 내일 500개 추가 예정
+
+2. Learning Rate = 0.0001, Epochs = 10
+-> 5종류 기준 91% Validation Accuracy
+-> 모델이 완성되고 나서 값 변경해가며 테스트할 예정
+
+3. Visualization... 오늘의 최대 난관
+-> 구체적으로 확인할 방법이 없다
+-> 코드 수정해가며 해보고는 있는데 계속 오류 발생
+
+4. CNN Transfer Learning 이론 & 예제 학습
+-> 아직까지 적합한 예제를 찾지는 못함
+-> SVM도 필요하면 한 번 해봐야 할 듯
+
+
+
+// 0917
+
+원점에서부터 다시 시작...
+체계적으로 계획을 세워서 train&test할 필요가 있다
+
+1. 핵심 변경사항
+*** categorical_crossentropy -> sparse_categorical_crossentropy로 변경!
+*** UNIST 예제와 최대한 비슷하게 만들어보기 위함 -> Visualization도 참고 가능
+*** UNIST 예제와 유사한 데이터셋을 Cat&Dog 예제처럼 Transfer Learning 해보자
+
+2. pre-trained model 목록 : 테스트 결과 MobileNetV2 > ResNet50V2 >>> InceptionV3
+- MobileNetV2
+Epoch 10/15
+50/50 [==============================] - 9s 182ms/step - loss: 0.0834 - accuracy: 1.0000 - val_loss: 0.3201 - val_accuracy: 0.9062
+
+- ResNet50V2
+Epoch 12/15
+50/50 [==============================] - 21s 414ms/step - loss: 0.0781 - accuracy: 0.9950 - val_loss: 0.4987 - val_accuracy: 0.8646
+
+- InceptionV3
+Epoch 7/15
+50/50 [==============================] - 12s 246ms/step - loss: 0.2145 - accuracy: 0.9550 - val_loss: 0.8276 - val_accuracy: 0.7917
+
+3. hyperparameter & test 값 목록
+- batch_size : (8, 16, 32)
+- learning_rate : (0.0001, 0.0005, 0.001)
+- epochs : (10, 15, 20)
+
+4. 내일 그냥 class를 5개->10개로 늘리자
+-> 버터플, 야도란, 피존투, 또가스, 아보 각각 100개 이미지 dataset 추가
+-> 오전 : 데이터 추가 수집, 오후 : train&test
+
+5. test 목록(ResNet50V2 사용)
+*** (batch_size, learning_rate, epochs)
+*** 기본값 : 중간값 선택 (8, 0.0005, 15)
+*** 내일 dataset이 두 배로 증가하는 것을 고려하여 batch_size는 (4, 8, 16)으로 테스트
+*** 내일은 ResNet50V2 대신 MobileNetV2로 테스트 및 훈련 코드 변경 예정
+(1) batch_size에 따른 차이
+- (4, 0.0005, 15) : overfitting?
+Epoch 9/15
+100/100 [==============================] - 24s 241ms/step - loss: 0.1037 - accuracy: 0.9775 - val_loss: 0.4039 - val_accuracy: 0.8700
+
+- (8, 0.0005, 15)
+Epoch 14/15
+50/50 [==============================] - 20s 391ms/step - loss: 0.0600 - accuracy: 0.9875 - val_loss: 0.3895 - val_accuracy: 0.8800
+
+- (16, 0.0005, 15)
+Epoch 15/15
+25/25 [==============================] - 16s 658ms/step - loss: 0.0811 - accuracy: 0.9925 - val_loss: 0.4923 - val_accuracy: 0.8500
+
+
+
+(2) learning_rate에 따른 차이
+- (8, 0.0001, 15)
+Epoch 15/15
+50/50 [==============================] - 17s 349ms/step - loss: 0.4205 - accuracy: 0.8900 - val_loss: 0.6070 - val_accuracy: 0.8100
+
+- (8, 0.0005, 15)
+Epoch 14/15
+50/50 [==============================] - 20s 391ms/step - loss: 0.0600 - accuracy: 0.9875 - val_loss: 0.3895 - val_accuracy: 0.8800
+
+- (8, 0.001, 15) : overfitting?
+Epoch 9/15
+50/50 [==============================] - 18s 364ms/step - loss: 0.0479 - accuracy: 0.9950 - val_loss: 0.4271 - val_accuracy: 0.8800
+
+
+
+(3) epochs에 따른 차이
+- (8, 0.0005, 10)
+Epoch 10/10
+50/50 [==============================] - 21s 428ms/step - loss: 0.1080 - accuracy: 0.9875 - val_loss: 0.4617 - val_accuracy: 0.8400
+
+- (8, 0.0005, 15)
+Epoch 14/15
+50/50 [==============================] - 20s 391ms/step - loss: 0.0600 - accuracy: 0.9875 - val_loss: 0.3895 - val_accuracy: 0.8800
+
+- (8, 0.0005, 20)
+Epoch 20/20
+50/50 [==============================] - 19s 374ms/step - loss: 0.0172 - accuracy: 1.0000 - val_loss: 0.4588 - val_accuracy: 0.8800
+
+
+
+*** 결론 : 마의 88% 벽을 뚫을 수 있는 방법은...?
+
+
+
+// 0918
+
+1. Class 갯수 증가 (5개 -> 10개)
+- 각 Class별 80개의 train image, 20개의 validation image
+
+2. 인식률 감소 (90% -> 85%)
+Epoch 8/15
+50/50 [==============================] - 15s 301ms/step - loss: 0.2151 - accuracy: 0.9725 - val_loss: 0.5696 - val_accuracy: 0.8542
+
+3. 인식률 개선 방안
+- 사진이 아닌 그림을 판별하는데 특화된 pre-trained 모델이 있는지?
+- batch_size, learning_rate, epochs 이외에 조절할 수 있는 hyperparameter가 있는지?
+
+
+
+// 0921
+
+1. VGG19, ResNeXt101 두 가지 pre-trained 모델을 추가 test
+-> VGG19는 오히려 accuracy가 낮게 측정됨
+-> ResNext101은 현재 사용 중인 tensorflow 버전에서는 지원되지 않음, 
+버전을 업그레이드 해보려다 잘 되던 것도 안될 것 같아서 일단 보류
+
+2. tf.compat.v1.disable_eager_execution() 
+-> 이 코드 실행 이후 test 속도가 급격히 느려짐
+-> 해결 방안 찾지 못하면 9/18(금) 버전으로 롤백 필요
+
+3. 사진이 아닌 그림에 특화된 pre-trained 모델을 구글링 해보았으나 찾지 못함
+-> 추가 모델을 test하는것 보다는 기존 모델의 hyperparameter 수정 먼저 해보자
+-> pre-trained가 아니라 직접 모델을 구성하여 test하는 것도 고려해 보자
+
+
+
+// 0922
+<Pre-Trained Model 비교>
+- Optimizer : Nadam
+model.compile(optimizer = keras.optimizers.Nadam(lr=0.002, beta_1=0.9, beta_2=0.999, epsilon=None, schedule_decay=0.004), 
+              loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+- batch_size = 16
+- epochs = 15
+
+1. MobileNetV2
+Epoch 13/15
+50/50 [==============================] - 23s 451ms/step - loss: 0.0184 - accuracy: 1.0000 - val_loss: 0.4674 - val_accuracy: 0.8646
+
+2. ResNet50V2
+Epoch 14/15
+50/50 [==============================] - 41s 817ms/step - loss: 0.0190 - accuracy: 1.0000 - val_loss: 0.4423 - val_accuracy: 0.8698
+
+3. InceptionV3
+Epoch 9/15
+50/50 [==============================] - 25s 501ms/step - loss: 0.0387 - accuracy: 1.0000 - val_loss: 0.9601 - val_accuracy: 0.7188
+
+4. InceptionResNetV2
+Epoch 12/15
+50/50 [==============================] - 63s 1s/step - loss: 0.0905 - accuracy: 0.9975 - val_loss: 0.7419 - val_accuracy: 0.8281
+
+5. VGG19
+Epoch 13/15
+50/50 [==============================] - 140s 3s/step - loss: 0.8868 - accuracy: 0.8225 - val_loss: 0.9728 - val_accuracy: 0.7500
+
+- 결론 : ResNet50V2 >= MobileNetV2 >> InceptionResNetV2 >> VGG19 >> InceptionV3
+- 학습 시간을 고려하면 MobileNetV2가 가장 효율적
+- 학습 시간과 관계 없이 val_accuracy를 최대화 하기 위해 
+최종 결과물에는 ResNet50V2 사용 예정
+
+
+
+<Optimizer 비교>
+- Pre-Trained Model : ResNet50V2
+base_model = tf.keras.applications.ResNet50V2(input_shape = IMG_SHAPE, include_top = False, weights = 'imagenet') 
+- batch_size = 16
+- epochs = 15
+
+1. RMSprop
+Epoch 15/15
+50/50 [==============================] - 31s 616ms/step - loss: 0.0503 - accuracy: 0.9975 - val_loss: 0.5467 - val_accuracy: 0.8594
+
+2. Adam
+Epoch 15/15
+50/50 [==============================] - 37s 732ms/step - loss: 0.0452 - accuracy: 1.0000 - val_loss: 0.5203 - val_accuracy: 0.8542
+
+3. Nesterov Momentum
+Epoch 14/15
+50/50 [==============================] - 44s 882ms/step - loss: 0.2467 - accuracy: 0.9613 - val_loss: 0.5704 - val_accuracy: 0.8177
+
+4. Adamax
+Epoch 15/15
+50/50 [==============================] - 36s 721ms/step - loss: 0.1253 - accuracy: 0.9950 - val_loss: 0.5762 - val_accuracy: 0.8333
+
+5. Nadam
+Epoch 15/15
+50/50 [==============================] - 37s 749ms/step - loss: 0.0176 - accuracy: 1.0000 - val_loss: 0.4801 - val_accuracy: 0.8646
+
+- 결론 : Nadam >= RMSprop >= Adam > Adamax > Nesterov Momentum
+- 최종 결과물에는 Nadam 사용 예정
+- Adam, Adamax, Nadam은 hyperparameter 변경 없이 기본값 그대로 사용
+
+
+
+내일은 최종 보고서 작성에만 집중!
+
+
+
+// 0923
+
+발표자료 제작 70%정도 완료
+
+Class별로 Accuracy를 볼 수 있는 방법을 하루 종일 적용해 보았으나 실패. 
+포기하고 발표자료 마무리 하는 방향으로...
+
+기존에는 epoch 수를 고정시켜두고 모델을 훈련시켰으나, 
+epoch수를 충분히 크게 설정 후 early_stopping 함수를 사용하여
+성능이 증가하지 않는 epoch를 최대 5회까지만 허용하도록 변경.
+평균적으로 10~15회의 epoch에 도달했을 때 학습 종료.
+
+10회 test 결과
+test accuracy는 10번 모두 90% 이상, 평균값은 91.5% -> 목표 달성
+validation loss는 평균값 0.7376 -> 목표 미달
